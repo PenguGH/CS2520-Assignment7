@@ -1,6 +1,7 @@
 import numpy as np
 import pygame as pg
-from random import randint, gauss
+import random
+from random import randint, choice, gauss
 
 pg.init()
 pg.font.init()
@@ -154,9 +155,8 @@ class Target(GameObject):
         self.coord = coord
         self.rad = rad
 
-        if color == None:
-            color = rand_color()
-        self.color = color
+        if color is None:
+            color = (WHITE)
 
     def check_collision(self, ball):
         '''
@@ -170,7 +170,11 @@ class Target(GameObject):
         '''
         Draws the target on the screen
         '''
-        pg.draw.circle(screen, self.color, self.coord, self.rad)
+        pg.draw.circle(screen, RED, self.coord, self.rad) # red outer circle
+        pg.draw.circle(screen, WHITE, self.coord, self.rad-5) # white 2nd inner circle
+        pg.draw.circle(screen, RED, self.coord, self.rad-10) # red 3rd inner circle
+        pg.draw.circle(screen, WHITE, self.coord, self.rad-15) # white 4th inner circle
+        pg.draw.circle(screen, RED, self.coord, self.rad-20) # red center circle
 
     def move(self):
         """
@@ -178,6 +182,7 @@ class Target(GameObject):
         :return: None
         """
         pass
+
 
 class MovingTargets(Target):
     def __init__(self, coord=None, color=None, rad=30):
@@ -235,7 +240,6 @@ class Manager:
                 30 - max(0, self.score_t.score()))))
             self.targets.append(Target(rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
                 30 - max(0, self.score_t.score()))))
-
 
     def process(self, events, screen):
         '''
@@ -322,7 +326,7 @@ class Manager:
 
 
 screen = pg.display.set_mode(SCREEN_SIZE)
-pg.display.set_caption("The gun of Khiryanov")
+pg.display.set_caption("Cannon Fodder")
 
 done = False
 clock = pg.time.Clock()
