@@ -12,7 +12,7 @@ RED = (255, 0, 0)
 
 SCREEN_SIZE = (800, 600)
 
-# random color function
+
 def rand_color():
     return (randint(0, 255), randint(0, 255), randint(0, 255))
 
@@ -24,11 +24,10 @@ class GameObject:
     def draw(self, screen):
         pass  
 
-
 class Shell(GameObject):
     '''
     The ball class. Creates a ball, controls it's movement and implement it's rendering.
-    '''
+    '''  
     def __init__(self, coord, vel, rad=20, color=None):
         '''
         Constructor method. Initializes ball's parameters and initial values.
@@ -66,12 +65,13 @@ class Shell(GameObject):
         self.check_corners()
         if self.vel[0]**2 + self.vel[1]**2 < 2**2 and self.coord[1] > SCREEN_SIZE[1] - 2*self.rad:
             self.is_alive = False
-
+    
     def draw(self, screen):
         '''
         Draws the ball on appropriate surface.
         '''
         pg.draw.circle(screen, self.color, self.coord, self.rad)
+        pg.draw.rect(screen, self.color, pg.Rect(30, 30, 60, 60))
 
 
 class Cannon(GameObject):
@@ -120,12 +120,18 @@ class Cannon(GameObject):
         '''
         self.angle = np.arctan2(target_pos[1] - self.coord[1], target_pos[0] - self.coord[0])
 
-    def move(self, inc):
+    def move(self, x_coordinate, y_coordinate):
         '''
-        Changes vertical position of the gun.
+        Changes horizontal position of the gun. by increasing or decreasing the x coordinate.
         '''
-        if (self.coord[1] > 30 or inc > 0) and (self.coord[1] < SCREEN_SIZE[1] - 30 or inc < 0):
-            self.coord[1] += inc
+        if (30 < self.coord[0] < SCREEN_SIZE[0] - 30) or x_coordinate * np.sign(SCREEN_SIZE[0] - self.coord[0]) > 0:
+            self.coord[0] += x_coordinate
+
+        '''
+        Changes vertical position of the gun. by increasing or decreasing the y coordinate.
+        '''
+        if (30 < self.coord[1] < SCREEN_SIZE[1] - 30) or y_coordinate * np.sign(SCREEN_SIZE[1] - self.coord[1]) > 0:
+            self.coord[1] += y_coordinate
 
     def draw(self, screen):
         '''
@@ -269,10 +275,14 @@ class Manager:
             if event.type == pg.QUIT:
                 done = True
             elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_UP:
-                    self.gun.move(-5)
-                elif event.key == pg.K_DOWN:
-                    self.gun.move(5)
+                if event.key == pg.K_w: # Added handling for w key
+                    self.gun.move(0, -5)  # Move up
+                elif event.key == pg.K_s: # Added handling for s key
+                    self.gun.move(0, 5)  # Move down
+                elif event.key == pg.K_a: # Added handling for a key
+                    self.gun.move(-5, 0)  # Move left
+                elif event.key == pg.K_d: # Added handling for d key
+                    self.gun.move(5, 0)  # Move right
             elif event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.gun.activate()
@@ -281,7 +291,7 @@ class Manager:
                     self.balls.append(self.gun.strike())
                     self.score_t.b_used += 1
         return done
-
+    
     def draw(self, screen):
         '''
         Runs balls', gun's, targets' and score table's drawing method.
@@ -340,6 +350,5 @@ while not done:
     done = mgr.process(pg.event.get(), screen)
 
     pg.display.flip()
-
 
 pg.quit()
