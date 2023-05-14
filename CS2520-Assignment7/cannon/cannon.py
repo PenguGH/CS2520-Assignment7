@@ -24,10 +24,13 @@ class GameObject:
     def draw(self, screen):
         pass  
 
+
 class Shell(GameObject):
     '''
     The ball class. Creates a ball, controls it's movement and implement it's rendering.
     '''  
+    min_rad = 10  # the minimum radius length for the shell
+    max_rad = 30  # the maximum radius length for the shell
     def __init__(self, coord, vel, rad=20, color=None):
         '''
         Constructor method. Initializes ball's parameters and initial values.
@@ -39,6 +42,14 @@ class Shell(GameObject):
         self.color = color
         self.rad = rad
         self.is_alive = True
+    	
+        # implement various types of projectiles. (shell changes size each time it is shot)
+        if rad is None:
+            self.initial_rad = randint(self.min_rad, self.max_rad) # random radius length between min and max radius
+            self.rad = self.initial_rad
+        else:
+            self.initial_rad = rad
+            self.rad = rad
 
     def check_corners(self, refl_ort=0.8, refl_par=0.9):
         '''
@@ -70,9 +81,14 @@ class Shell(GameObject):
         '''
         Draws the ball on appropriate surface.
         '''
+        if self.rad == self.initial_rad:
+            self.change_size()  # Randomly change the size of the bullet before drawing it by using the change_size function
         pg.draw.circle(screen, self.color, self.coord, self.rad)
         pg.draw.rect(screen, self.color, pg.Rect(30, 30, 60, 60))
 
+    def change_size(self):
+        if self.rad == self.initial_rad:
+            self.rad = randint(self.min_rad, self.max_rad)
 
 class Cannon(GameObject):
     '''
@@ -351,3 +367,4 @@ while not done:
 
     pg.display.flip()
 
+pg.quit()
