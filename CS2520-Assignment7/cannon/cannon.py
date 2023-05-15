@@ -216,6 +216,11 @@ class MovingTargets(Target):
         # update position based on velocity
         self.coord[0] += self.vx
         self.coord[1] += self.vy
+
+        # change direction randomly
+        if randint(0, 100) < 5:
+            self.vx = randint(-2, 2)
+            self.vy = randint(-2, 2)
         
         # check for collision with edges of the screen
         if self.coord[0] < self.rad:
