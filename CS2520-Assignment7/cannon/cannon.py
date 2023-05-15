@@ -232,6 +232,47 @@ class MovingTargets(Target):
             self.coord[1] = SCREEN_SIZE[1] - self.rad
             self.vy = -abs(self.vy)  # change direction in y-axis
 
+class Bomb(GameObject):
+    # do collision
+    '''
+    The Bomb class. Creates a Bomb, controls it's movement and implement it's rendering.
+    '''
+    def __init__(self, coord, vel=None, rad=10, color=None):
+        '''
+        Constructor method. Initializes bomb's parameters and initial values.
+        '''
+        if coord == None:
+            coord = [randint(rad, SCREEN_SIZE[0] - rad), randint(rad, SCREEN_SIZE[1] - rad)]
+        self.coord = coord
+        if vel == None:
+            vel = [0,2]
+        self.vel = vel
+        if color == None:
+            color = rand_color()
+        self.color = color
+        self.rad = rad
+        self.is_alive = True
+
+    def move(self, time=1, grav=0.25):
+        '''
+        Moves the bomb according to it's velocity and time step.
+        Changes the bomb's velocity due to gravitational force.
+        '''
+        # increases the y-velocity by gravity every iteration
+        self.vel[1] += grav
+
+        #changes y coordinate
+        self.coord[1] += time * self.vel[1]
+
+        #checks collision with ground
+        if self.coord[1] > SCREEN_SIZE[1] - 2*self.rad:
+            self.is_alive = False
+
+    def draw(self, screen):
+        '''
+        Draws the bomb on appropriate surface.
+        '''
+        pg.draw.circle(screen, self.color, self.coord, self.rad)
 
 class ScoreTable:
     '''
@@ -267,7 +308,9 @@ class Manager:
         self.targets = []
         self.score_t = ScoreTable()
         self.n_targets = n_targets
+        self.bombs = []       
         self.new_mission()
+        
 
     def new_mission(self):
         '''
@@ -295,6 +338,11 @@ class Manager:
 
         if len(self.targets) == 0 and len(self.balls) == 0:
             self.new_mission()
+
+        # Once every bomb disappears, a new set of bombs will be dropped
+        if len(self.bombs) == 0:
+            for i, target in enumerate(self.targets): 
+                self.bombs.append(Bomb(coord=target.coord.copy(), vel=None, rad=10))
 
         return done
 
@@ -334,6 +382,8 @@ class Manager:
             target.draw(screen)
         self.gun.draw(screen)
         self.score_t.draw(screen)
+        for bomb in self.bombs:
+            bomb.draw(screen)
 
     def move(self):
         '''
@@ -348,6 +398,12 @@ class Manager:
             self.balls.pop(i)
         for i, target in enumerate(self.targets):
             target.move()
+        
+        # Manages of the movement of each bomb and checks if it is still active
+        for i, bomb in enumerate(self.bombs):
+            bomb.move()
+            if not bomb.is_alive:
+                self.bombs.pop(i)
         self.gun.gain()
 
     def collide(self):
