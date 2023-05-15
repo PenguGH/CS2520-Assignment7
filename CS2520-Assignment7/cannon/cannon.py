@@ -1,6 +1,5 @@
 import numpy as np
 import pygame as pg
-import random
 from random import randint, choice, gauss
 
 pg.init()
@@ -89,6 +88,7 @@ class Shell(GameObject):
     def change_size(self):
         if self.rad == self.initial_rad:
             self.rad = randint(self.min_rad, self.max_rad)
+
 
 class Cannon(GameObject):
     '''
@@ -213,8 +213,24 @@ class MovingTargets(Target):
         self.vy = randint(-2, +2)
     
     def move(self):
+        # update position based on velocity
         self.coord[0] += self.vx
         self.coord[1] += self.vy
+        
+        # check for collision with edges of the screen
+        if self.coord[0] < self.rad:
+            self.coord[0] = self.rad
+            self.vx = abs(self.vx)  # change direction in x-axis
+        elif self.coord[0] > SCREEN_SIZE[0] - self.rad:
+            self.coord[0] = SCREEN_SIZE[0] - self.rad
+            self.vx = -abs(self.vx)  # change direction in x-axis
+        
+        if self.coord[1] < self.rad:
+            self.coord[1] = self.rad
+            self.vy = abs(self.vy)  # change direction in y-axis
+        elif self.coord[1] > SCREEN_SIZE[1] - self.rad:
+            self.coord[1] = SCREEN_SIZE[1] - self.rad
+            self.vy = -abs(self.vy)  # change direction in y-axis
 
 
 class ScoreTable:
