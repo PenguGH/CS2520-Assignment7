@@ -237,6 +237,7 @@ class MovingTargets(Target):
             self.coord[1] = SCREEN_SIZE[1] - self.rad
             self.vy = -abs(self.vy)  # change direction in y-axis
 
+
 class Bomb(GameObject):
     # do collision
     '''
@@ -279,6 +280,7 @@ class Bomb(GameObject):
         '''
         pg.draw.circle(screen, self.color, self.coord, self.rad)
 
+
 class ScoreTable:
     '''
     Score table class.
@@ -315,7 +317,6 @@ class Manager:
         self.n_targets = n_targets
         self.bombs = []       
         self.new_mission()
-        
 
     def new_mission(self):
         '''
@@ -341,7 +342,9 @@ class Manager:
         self.collide()
         self.draw(screen)
 
-        if len(self.targets) == 0 and len(self.balls) == 0:
+        # check if all targets are destroyed
+        if len(self.targets) == 0:
+            self.balls = []  # clear any remaining balls
             self.new_mission()
 
         # Once every bomb disappears, a new set of bombs will be dropped
