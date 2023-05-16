@@ -8,6 +8,7 @@ pg.font.init()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 SCREEN_SIZE = (800, 600)
 
@@ -163,6 +164,70 @@ class Cannon(GameObject):
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
 
+class EnemyCannon(Cannon):
+    '''
+    EnemyCannon class. Manages it's renderring, movement and striking.
+    '''
+    def __init__(self, coord=[SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2], angle=0, max_pow=50, min_pow=10, color=BLUE):
+        super().__init__(coord=[SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2], angle=0, max_pow=50, min_pow=10, color=BLUE)
+        self.vx = randint(-2, +2)
+        self.vy = randint(-2, +2)
+    
+    def activate(self):
+        pass
+
+    def gain(self, inc=2):
+        pass
+
+    def strike(self):
+        '''
+        Creates ball, according to a random direction and charge power.
+        '''
+        vel = randint(10,50)
+        angle = randint(10,90)
+        ball = Shell(list(self.coord), [int(vel * np.cos(angle)), int(vel * np.sin(angle))])
+        self.pow = self.min_pow
+        #self.active = False
+        return ball
+        
+    def set_angle(self, target_pos):
+        pass
+
+    def move(self):
+        '''
+        Moves EnemyCannon randomly on screen
+        '''
+        # change direction randomly
+        if randint(0, 100) < 5:
+            self.vx = randint(-2, 2)
+            self.vy = randint(-2, 2)
+
+        # check for collision with edges of the screen
+        if self.coord[0] > SCREEN_SIZE[0]:
+            self.coord[0] = SCREEN_SIZE[0] 
+            self.vx = -abs(self.vx)  # change direction in x-axis
+        else:
+            self.coord[0] += self.vx
+        
+        if self.coord[1] > SCREEN_SIZE[1]:
+            self.coord[1] = SCREEN_SIZE[1]
+            self.vy = -abs(self.vy)  # change direction in y-axis
+        else:
+            self.coord[1] += self.vy
+
+    def draw(self, screen):
+        '''
+        Draws the EnemyCannon on the screen.
+        '''
+        gun_shape = []
+        vec_1 = np.array([int(5*np.cos(self.angle - np.pi/2)), int(5*np.sin(self.angle - np.pi/2))])
+        vec_2 = np.array([int(self.pow*np.cos(self.angle)), int(self.pow*np.sin(self.angle))])
+        gun_pos = np.array(self.coord)
+        gun_shape.append((gun_pos + vec_1).tolist())
+        gun_shape.append((gun_pos + vec_1 + vec_2).tolist())
+        gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
+        gun_shape.append((gun_pos - vec_1).tolist())
+        pg.draw.polygon(screen, self.color, gun_shape)
 
 class Target(GameObject):
     '''
@@ -239,7 +304,6 @@ class MovingTargets(Target):
 
 
 class Bomb(GameObject):
-    # do collision
     '''
     The Bomb class. Creates a Bomb, controls it's movement and implement it's rendering.
     '''
@@ -315,7 +379,12 @@ class Manager:
         self.targets = []
         self.score_t = ScoreTable()
         self.n_targets = n_targets
-        self.bombs = []       
+        self.bombs = []    
+
+        #Defines EnemyCannon and balls
+        self.EnemyCannon = [EnemyCannon(), EnemyCannon(), EnemyCannon()]
+        self.enemyBalls = []
+
         self.new_mission()
 
     def new_mission(self):
@@ -341,6 +410,11 @@ class Manager:
         self.move()
         self.collide()
         self.draw(screen)
+
+        # Randomly shoots EnemyCannon balls
+        for cannon in self.EnemyCannon:
+            if (randint(0,100) < 1):
+                self.enemyBalls.append(cannon.strike())
 
         # check if all targets are destroyed
         if len(self.targets) == 0:
@@ -386,12 +460,18 @@ class Manager:
         '''
         for ball in self.balls:
             ball.draw(screen)
+        for ball in self.enemyBalls:
+            ball.draw(screen)
         for target in self.targets:
             target.draw(screen)
         self.gun.draw(screen)
         self.score_t.draw(screen)
         for bomb in self.bombs:
             bomb.draw(screen)
+        
+        #justin added
+        for cannon in self.EnemyCannon:
+            cannon.draw(screen)
 
     def move(self):
         '''
@@ -402,6 +482,10 @@ class Manager:
             ball.move(grav=2)
             if not ball.is_alive:
                 dead_balls.append(i)
+        for i, ball in enumerate(self.enemyBalls):
+            ball.move(grav=2)
+            if not ball.is_alive:
+                self.enemyBalls.pop(i)
         for i in reversed(dead_balls):
             self.balls.pop(i)
         for i, target in enumerate(self.targets):
@@ -412,6 +496,9 @@ class Manager:
             bomb.move()
             if not bomb.is_alive:
                 self.bombs.pop(i)
+        # Moves the EnemyCannon randomly on screen
+        for cannon in self.EnemyCannon:
+            cannon.move()
         self.gun.gain()
 
     def collide(self):
